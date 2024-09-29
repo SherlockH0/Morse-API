@@ -6,12 +6,17 @@ SECRET_KEY = NotImplemented
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
+    "channels",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # 3rd party
+    "rest_framework",
+    "corsheaders",
     # Project apps
     "morse_api.api.apps.ApiConfig",
 ]
@@ -24,6 +29,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "morse_api.project.urls"
@@ -45,6 +51,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "morse_api.project.wsgi.application"
+ASGI_APPLICATION = "morse_api.project.asgi.application"
 
 
 # Database
@@ -98,3 +105,5 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True

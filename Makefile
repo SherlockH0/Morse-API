@@ -2,6 +2,10 @@
 install:
 	poetry install
 
+.PHONY: shell 
+shell:
+	poetry run python -m morse_api.manage shell
+
 .PHONY: migrate
 migrate: 
 	poetry run python -m morse_api.manage migrate

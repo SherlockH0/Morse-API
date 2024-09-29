@@ -1,3 +1,5 @@
 from django.contrib import admin
 
-# Register your models here.
+from morse_api.api.models import Message, Room
+
+admin.site.register((Room, Message))
