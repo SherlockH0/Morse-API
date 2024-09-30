@@ -1,4 +1,6 @@
+import django.contrib.auth.password_validation as password_validation
 from django.contrib.auth.models import User
+from django.core import exceptions
 from rest_framework.serializers import ModelSerializer
 
 
@@ -11,3 +13,20 @@ class UserSerializer(ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
+
+    def validate(self, attrs):
+        user = User(**attrs)
+
+        password = attrs.get("password")
+
+        errors = dict()
+
+        try:
+            password_validation.validate_password(password=password, user=user)
+        except exceptions.ValidationError as e:
+            errors["password"] = list(e.messages)
+
+        if errors:
+            raise exceptions.ValidationError(errors)
+
+        return super().validate(attrs)
