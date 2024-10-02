@@ -16,6 +16,7 @@ if not os.path.isabs(LOCAL_SETTINGS_PATH):
 
 include(
     "base.py",
+    "channels.py",
     "custom.py",
     "restframework.py",
     optional(LOCAL_SETTINGS_PATH),
