@@ -18,11 +18,11 @@ class Room(models.Model):
 class Message(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    message = encrypt(models.TextField())
+    body = encrypt(models.TextField())
     datetime_sent = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
-        return f"@{self.datetime_sent} {self.user} said: {self.message}"
+        return f"@{self.datetime_sent} {self.user} said: {self.body}"
 
     class Meta:
         ordering = ["-datetime_sent"]

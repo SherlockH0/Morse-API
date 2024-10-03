@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.core import exceptions
 from rest_framework.serializers import ModelSerializer
 
+from morse_api.api.models import Message
+
 
 class UserSerializer(ModelSerializer):
     class Meta:
@@ -30,3 +32,20 @@ class UserSerializer(ModelSerializer):
             raise exceptions.ValidationError(errors)
 
         return super().validate(attrs)
+
+
+class MessageUserSerializer(ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "username",
+        ]
+
+
+class MessageSerializer(ModelSerializer):
+    user = MessageUserSerializer()
+
+    class Meta:
+        model = Message
+        fields = ["id", "user", "body", "datetime_sent"]
+        depth = 1
