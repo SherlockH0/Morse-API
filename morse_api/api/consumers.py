@@ -20,6 +20,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def create_message(self, **kwargs):
         return Message.objects.create(**kwargs)
 
+    @sync_to_async
+    def serialize_message(self, message):
+        return json.dumps(MessageSerializer(message).data)
+
     async def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.chatroom = await self.get_chatroom()
@@ -45,21 +49,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {
                 "type": "chat.message",
-                "message_id": message.id,
+                "message": await self.serialize_message(message),
             },
         )
 
-    @sync_to_async
-    def serialize(self, message):
-        return json.dumps(MessageSerializer(message).data)
-
     async def chat_message(self, event):
-        message = await database_sync_to_async(Message.objects.get)(
-            id=event["message_id"]
-        )
-
-        data = await self.serialize(message)
-        print(data)
-        print(type(data))
-
-        await self.send(text_data=data)
+        await self.send(text_data=event["message"])
