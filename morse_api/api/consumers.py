@@ -3,7 +3,8 @@ import json
 
 from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
-from channels.generic.websocket import AsyncWebsocketConsumer, async_to_sync
+from channels.generic.websocket import AsyncWebsocketConsumer
+from django.db.models import F
 from django.shortcuts import get_object_or_404
 
 from morse_api.api.models import Message, UserRoom
@@ -13,15 +14,26 @@ from morse_api.api.serializers import MessageSerializer
 class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_chatroom(self):
-        return get_object_or_404(
+        chatroom = get_object_or_404(
             UserRoom, room__name=self.room_name, user=self.scope["user"]
         )
 
+        return chatroom
+
     @database_sync_to_async
     def create_message(self, body):
+        UserRoom.objects.filter(room=self.chatroom.room).update(
+            unread_messages=F("unread_messages") + 1
+        )
+
         return Message.objects.create(
             body=body, user=self.scope["user"], room=self.chatroom.room
         )
+
+    @database_sync_to_async
+    def view_unread_messages(self):
+        self.chatroom.unread_messages = 0
+        self.chatroom.save()
 
     @sync_to_async
     def serialize_message(self, message):
@@ -32,6 +44,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.chatroom = await self.get_chatroom()
 
         self.room_group_name = f"chat_{self.room_name}"
+
+        await self.view_unread_messages()
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
@@ -55,4 +69,5 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def chat_message(self, event):
+        await self.view_unread_messages()
         await self.send(text_data=event["message"])

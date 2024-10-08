@@ -32,6 +32,7 @@ class Message(models.Model):
 class UserRoom(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    unread_messages = models.PositiveSmallIntegerField(default=0)
 
     def __str__(self) -> str:
         return f"{self.user} in {self.room}"
