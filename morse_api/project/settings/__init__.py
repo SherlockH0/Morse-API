@@ -21,4 +21,5 @@ include(
     "restframework.py",
     optional(LOCAL_SETTINGS_PATH),
     "envvars.py",
+    "cloudinary.py",
 )

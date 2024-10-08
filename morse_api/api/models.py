@@ -10,6 +10,7 @@ from django_cryptography.fields import encrypt
 class Room(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=150)
+    avatar = CloudinaryField()
 
     def __str__(self) -> str:
         return self.name

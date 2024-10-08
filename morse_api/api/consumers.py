@@ -5,20 +5,23 @@ from asgiref.sync import sync_to_async
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer, async_to_sync
 from django.shortcuts import get_object_or_404
-from rest_framework.renderers import JSONRenderer
 
-from morse_api.api.models import Message, Room
+from morse_api.api.models import Message, UserRoom
 from morse_api.api.serializers import MessageSerializer
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_chatroom(self):
-        return get_object_or_404(Room, name=self.room_name)
+        return get_object_or_404(
+            UserRoom, room__name=self.room_name, user=self.scope["user"]
+        )
 
     @database_sync_to_async
-    def create_message(self, **kwargs):
-        return Message.objects.create(**kwargs)
+    def create_message(self, body):
+        return Message.objects.create(
+            body=body, user=self.scope["user"], room=self.chatroom.room
+        )
 
     @sync_to_async
     def serialize_message(self, message):
@@ -41,9 +44,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         body = text_data_json["body"]
 
-        message = await self.create_message(
-            room=self.chatroom, body=body, user=self.scope["user"]
-        )
+        message = await self.create_message(body)
 
         await self.channel_layer.group_send(
             self.room_group_name,
