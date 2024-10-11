@@ -1,7 +1,7 @@
 import django.contrib.auth.password_validation as password_validation
 from django.contrib.auth.models import User
 from django.core import exceptions
-from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from rest_framework.serializers import CharField, ModelSerializer, SerializerMethodField
 
 from morse_api.api.models import Message, Room, UserRoom
 
@@ -19,17 +19,18 @@ class UserSerializer(ModelSerializer):
     def validate(self, attrs):
         user = User(**attrs)
 
-        password = attrs.get("password")
+        password = attrs.get("password", None)
 
-        errors = dict()
+        if password:
+            errors = dict()
 
-        try:
-            password_validation.validate_password(password=password, user=user)
-        except exceptions.ValidationError as e:
-            errors["password"] = list(e.messages)
+            try:
+                password_validation.validate_password(password=password, user=user)
+            except exceptions.ValidationError as e:
+                errors["password"] = list(e.messages)
 
-        if errors:
-            raise exceptions.ValidationError(errors)
+            if errors:
+                raise exceptions.ValidationError(errors)
 
         return super().validate(attrs)
 
@@ -43,9 +44,18 @@ class MessageSerializer(ModelSerializer):
         depth = 1
 
 
+class RoomSerializer(ModelSerializer):
+    avatar = CharField(source="avatar.public_id", read_only=True)
+
+    class Meta:
+        model = Room
+        fields = "__all__"
+
+
 class UserRoomSerializer(ModelSerializer):
     user = UserSerializer()
     last_message = SerializerMethodField()
+    room = RoomSerializer()
 
     def get_last_message(self, obj):
         return MessageSerializer(obj.room.message_set.first()).data
