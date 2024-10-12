@@ -1,9 +1,15 @@
 # pyright:basic, reportIncompatibleMethodOverride=false
+import cloudinary.uploader
+from cloudinary import CloudinaryImage
 from django.contrib.auth.models import User
 from rest_framework import generics, permissions, viewsets
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import JsonResponse
+from rest_framework.parsers import FileUploadParser, MultiPartParser
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from morse_api.api.models import Message, Room, UserRoom
+from morse_api.api.models import Message, UserRoom
 from morse_api.api.serializers import (
     MessageSerializer,
     UserRoomSerializer,
@@ -28,6 +34,20 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsUserOrReadOnly]
+
+
+class UserAvatarUploadView(APIView):
+    parser_classes = (MultiPartParser,)
+
+    def put(self, request, format=None):
+        file_obj = request.FILES
+
+        public_id = cloudinary.uploader.upload(file_obj["avatar"])["public_id"]
+
+        request.user.profile.avatar = CloudinaryImage(public_id)
+        request.user.profile.save()
+
+        return JsonResponse({"avatar": public_id}, status=200)
 
 
 class UserRoomViewSet(viewsets.ModelViewSet):

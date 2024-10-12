@@ -7,9 +7,11 @@ from morse_api.api.models import Message, Room, UserRoom
 
 
 class UserSerializer(ModelSerializer):
+    avatar = CharField(source="profile.avatar.public_id", read_only=True)
+
     class Meta:
         model = User
-        fields = ["id", "username", "password"]
+        fields = ["id", "username", "password", "avatar"]
         extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
